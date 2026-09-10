@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Pocket Therapist — Lesson Display</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3EDE1;
+    --paper-dim:#EAE2D2;
+    --ink:#24211C;
+    --ink-soft:#5B564A;
+    --rule:#CDC3AE;
+    --accent:#A6401F;
+    --red:#B23A2E;
+    --blue:#2F5A82;
+    --green:#3D7A4E;
+    --yellow:#A5791E;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:22px 36px 0 36px;
+  }
+  .masthead{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:0.02em;
+    color:var(--ink-soft);
+  }
+  .counter{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  .progress{
+    display:flex;
+    gap:3px;
+    margin:12px 36px 0 36px;
+    height:4px;
+  }
+  .progress .seg{
+    flex:1;
+    background:var(--rule);
+    position:relative;
+    overflow:hidden;
+  }
+  .progress .seg .fill{
+    position:absolute;
+    inset:0;
+    background:var(--accent);
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform .35s ease;
+  }
+
+  main{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 20px 8px 20px;
+  }
+  .slide{
+    width:100%;
+    max-width:680px;
+  }
+  .kicker{
+    font-size:13px;
+    color:var(--accent);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  h1.cover-title{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:44px;
+    line-height:1.12;
+    margin:0 0 14px 0;
+  }
+  .byline{
+    color:var(--ink-soft);
+    font-size:15px;
+    margin-bottom:28px;
+  }
+  .lede{
+    font-family:'Source Serif 4', serif;
+    font-size:19px;
+    line-height:1.55;
+    color:var(--ink);
+    max-width:56ch;
+  }
+  .card-key{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:30px;
+  }
+  .key-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    background:var(--paper-dim);
+    border-left:5px solid var(--c);
+  }
+  .key-item .letter{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:20px;
+  }
+  .key-item .name{
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  .instr-list{
+    margin-top:22px;
+    padding-left:0;
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .instr-list li{
+    font-size:15.5px;
+    line-height:1.5;
+    padding-left:26px;
+    position:relative;
+  }
+  .instr-list li::before{
+    content:attr(data-n);
+    position:absolute;
+    left:0;
+    top:0;
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    color:var(--accent);
+    font-size:15px;
+  }
+
+  h2.q-title{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:27px;
+    line-height:1.35;
+    margin:0 0 6px 0;
+  }
+  .q-context{
+    font-family:'Source Serif 4', serif;
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:15.5px;
+    margin-bottom:22px;
+    border-left:2px solid var(--rule);
+    padding-left:14px;
+  }
+  .word-tag{
+    display:inline-block;
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:15px;
+    background:var(--ink);
+    color:var(--paper);
+    padding:3px 10px;
+    margin-bottom:14px;
+  }
+  .options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .opt{
+    background:var(--paper-dim);
+    border-left:6px solid var(--c);
+    padding:16px 16px 16px 16px;
+    font-size:15.5px;
+    line-height:1.45;
+    display:flex;
+    gap:12px;
+    transition:background .2s ease, box-shadow .2s ease;
+  }
+  .opt .tag{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    color:var(--c);
+    flex-shrink:0;
+  }
+  .opt.correct-reveal{
+    background:#fff;
+    box-shadow:inset 0 0 0 2px var(--c);
+  }
+  .opt.correct-reveal .tag::after{
+    content:" ✓";
+  }
+  .reveal-hint{
+    margin-top:16px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+
+  .talk-wrap{
+    text-align:left;
+  }
+  .talk-prompt{
+    font-family:'Source Serif 4', serif;
+    font-size:26px;
+    line-height:1.4;
+    margin:0 0 20px 0;
+  }
+  .talk-note{
+    font-size:14px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+    margin-top:26px;
+  }
+
+  .end-wrap{
+    text-align:left;
+  }
+  .end-wrap h2{
+    font-family:'Source Serif 4', serif;
+    font-size:32px;
+    margin:0 0 10px 0;
+  }
+
+  .conn-wrap{
+    text-align:left;
+  }
+  .conn-sub{
+    font-size:14.5px;
+    color:var(--ink-soft);
+    margin:-2px 0 18px 0;
+  }
+  .conn-solved{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .conn-solved-row{
+    padding:12px 16px;
+    background:var(--c);
+    color:#fff;
+  }
+  .conn-solved-row .cat-name{
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.01em;
+    display:block;
+    margin-bottom:2px;
+  }
+  .conn-solved-row .cat-words{
+    font-family:'Source Serif 4', serif;
+    font-size:15px;
+  }
+  .conn-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:8px;
+    margin-top:8px;
+  }
+  .conn-tile{
+    background:var(--paper-dim);
+    border:1px solid var(--rule);
+    padding:14px 6px;
+    text-align:center;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    user-select:none;
+    line-height:1.3;
+    min-height:58px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .conn-tile:hover{
+    border-color:var(--ink-soft);
+  }
+  .conn-tile.selected{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+  .conn-tile.shake{
+    animation:shake .4s ease;
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-6px);}
+    40%{transform:translateX(6px);}
+    60%{transform:translateX(-4px);}
+    80%{transform:translateX(4px);}
+  }
+  .conn-controls{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:18px;
+  }
+  .conn-lives{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .conn-msg{
+    font-size:13px;
+    color:var(--accent);
+    min-height:18px;
+    margin-top:10px;
+  }
+  @media (max-width:600px){
+    .conn-grid{grid-template-columns:repeat(2, 1fr);}
+  }
+
+  footer.nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 36px 10px 36px;
+    border-top:1px solid var(--rule);
+    margin-top:10px;
+  }
+  .credit{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    padding:0 36px 20px 36px;
+  }
+  .credit a{
+    color:var(--ink-soft);
+  }
+  .credit a:hover{
+    color:var(--accent);
+  }
+  .nav-left, .nav-right{
+    display:flex;
+    gap:10px;
+  }
+  button{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    font-weight:500;
+    padding:10px 18px;
+    border:1px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  button:hover:not(:disabled){
+    background:var(--ink);
+    color:var(--paper);
+  }
+  button:disabled{
+    opacity:0.3;
+    cursor:default;
+  }
+  button.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  button.primary:hover{
+    background:#8a3319;
+    color:#fff;
+  }
+  button:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  @media (max-width:600px){
+    header.top, .progress, footer.nav{padding-left:20px; padding-right:20px;}
+    h1.cover-title{font-size:32px;}
+    .options{grid-template-columns:1fr;}
+    .card-key{grid-template-columns:1fr;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .progress .seg .fill, .opt{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="masthead">The Pocket Therapist — a lesson in three parts</div>
+  <div class="counter" id="counter">1 / 1</div>
+</header>
+
+<div class="progress" id="progress">
+  <div class="seg" data-part="open"><div class="fill"></div></div>
+  <div class="seg" data-part="comprehension"><div class="fill"></div></div>
+  <div class="seg" data-part="vocabulary"><div class="fill"></div></div>
+  <div class="seg" data-part="connections"><div class="fill"></div></div>
+  <div class="seg" data-part="reflection"><div class="fill"></div></div>
+</div>
+
+<main>
+  <div class="slide" id="slide"></div>
+</main>
+
+<footer class="nav">
+  <div class="nav-left">
+    <button id="prevBtn">Previous</button>
+  </div>
+  <div class="nav-right">
+    <button id="revealBtn" class="primary" style="display:none;">Reveal answer</button>
+    <button id="nextBtn" class="primary">Next</button>
+  </div>
+</footer>
+
+<div class="credit">Nannestad High School- Barbara Anna Zielonka<br>Source article: <a href="https://www.theguardian.com/technology/2025/oct/30/teenage-boys-using-personalised-ai-for-therapy-and-romance-survey-finds" target="_blank" rel="noopener">theguardian.com</a></div>
+
+<script>
+const CARD = {
+  A: {label:'Red', var:'--red'},
+  B: {label:'Blue', var:'--blue'},
+  C: {label:'Green', var:'--green'},
+  D: {label:'Yellow', var:'--yellow'}
+};
+
+const comprehension = [
+  {
+    q: "According to the Male Allies UK survey, what proportion of teenage boys said they were considering the idea of an AI friend?",
+    options: {A:"Nearly a tenth", B:"Just over a third", C:"About half", D:"Nearly all of them"},
+    correct:"B"
+  },
+  {
+    q: "What has character.ai announced it will do?",
+    options: {A:"Shut the company down completely", B:"Ban teenagers from open-ended chats with its bots", C:"Charge teenagers a subscription fee", D:"Require every parent to approve each message"},
+    correct:"B"
+  },
+  {
+    q: "According to Lee Chambers, how do many parents misunderstand their teenagers' use of AI?",
+    options: {A:"They assume teens mainly use it to cheat on homework", B:"They think their children never use AI at all", C:"They believe schools have already banned it", D:"They think AI use among teens is falling"},
+    correct:"A"
+  },
+  {
+    q: "What share of teenage boys said the online world feels more rewarding than the real world?",
+    options: {A:"33%", B:"43%", C:"53%", D:"63%"},
+    correct:"C"
+  },
+  {
+    q: "What is one danger the Voice of the Boys report raises about chatbots?",
+    options: {A:"They are too expensive for most families", B:"They can falsely claim to be a licensed therapist or a real person", C:"They only work on expensive phones", D:"They take too long to reply"},
+    correct:"B"
+  },
+  {
+    q: "Why does Lee Chambers say AI companions can feel so validating to young users?",
+    options: {A:"They are cheaper than spending time with real friends", B:"They give more accurate advice than trained professionals", C:"They reply instantly and are built to keep the user engaged", D:"Schools recommend them as a study tool"},
+    correct:"C"
+  },
+  {
+    q: "What happened to the 14-year-old in Florida mentioned in the article?",
+    options: {A:"He was suspended from school for using AI to cheat", B:"He took his own life after becoming obsessed with a chatbot", C:"He won a national competition for building an AI chatbot", D:"He was the first teenager to be banned from character.ai"},
+    correct:"B"
+  },
+  {
+    q: "According to the report, what risk do AI girlfriends pose for boys' social development?",
+    options: {A:"They may stop boys from learning to recognise and respect boundaries", B:"They improve how boys communicate with real people", C:"They encourage boys to spend less time on their phones", D:"They have no real effect on how boys relate to others"},
+    correct:"A"
+  }
+];
+
+const vocabulary = [
+  {
+    word:"guardrails",
+    context:"“Even where guardrails are meant to be in place, there's a mountain of evidence…”",
+    options:{A:"Decorative features on a website", B:"Safety rules or systems designed to prevent harm", C:"A monthly subscription fee", D:"Instructions for installing an app"},
+    correct:"B"
+  },
+  {
+    word:"validating",
+    context:"“It is very, very validating, what it says, because it wants to keep you connected.”",
+    options:{A:"Confusing and hard to follow", B:"Boring and repetitive", C:"Making someone feel their feelings are reasonable and worth taking seriously", D:"Expensive to access"},
+    correct:"C"
+  },
+  {
+    word:"proliferation",
+    context:"Male Allies UK raised concern about the proliferation of chatbots with “therapy” in their names.",
+    options:{A:"The complete disappearance of something", B:"A rapid increase in the number of something", C:"The average price of something", D:"A small trial version of something"},
+    correct:"B"
+  },
+  {
+    word:"manipulated",
+    context:"A chatbot had allegedly manipulated a teenager into taking his own life.",
+    options:{A:"Helped someone reach a wise decision", B:"Controlled or influenced someone unfairly, often through deception", C:"Politely disagreed with someone", D:"Ignored someone's messages"},
+    correct:"B"
+  },
+  {
+    word:"disclaimer",
+    context:"“…a small disclaimer at the bottom saying the AI chatbot is not real.”",
+    options:{A:"A statement that limits responsibility or clarifies something", B:"A type of paid advertisement", C:"A password needed to log in", D:"A friendly greeting message"},
+    correct:"A"
+  },
+  {
+    word:"sustained",
+    context:"“It has taken sustained pressure from the media and politicians to make a tech firm do the right thing.”",
+    options:{A:"Sudden and very brief", B:"Continuing steadily over a long period without stopping", C:"Accidental and unplanned", D:"Reduced or weakened"},
+    correct:"B"
+  },
+  {
+    word:"boundaries",
+    context:"Boys may not be learning to “recognise and respect boundaries.”",
+    options:{A:"Physical walls around a building", B:"Limits that define what behaviour is acceptable", C:"Rules inside a video game", D:"A type of software update"},
+    correct:"B"
+  },
+  {
+    word:"obsessed",
+    context:"A 14-year-old took his own life after becoming obsessed with an AI-powered chatbot.",
+    options:{A:"Mildly curious about something", B:"Having an extreme, unhealthy interest that's hard to stop thinking about", C:"Feeling bored by something", D:"Forgetting about something completely"},
+    correct:"B"
+  }
+];
+
+const connectionsCategories = [
+  { name:"Shaping a chatbot", colorVar:"--yellow", words:["characters","personalities","appearance","demeanour"] },
+  { name:"Why it feels good", colorVar:"--green", words:["companionship","connected","rewarding","validating"] },
+  { name:"Trying to keep teens safe", colorVar:"--blue", words:["guardrails","disclaimer","regulations","ban"] },
+  { name:"Warning signs", colorVar:"--red", words:["manipulated","despair","self-harm","obsessed"] }
+];
+
+const reflections = [
+  "Why do you think some teenagers find AI companions more rewarding than real-life relationships?",
+  "Do you agree that chatbots should be banned from open-ended conversations with teenagers? Why or why not?",
+  "What is the real difference between talking to a close friend and talking to an AI companion?",
+  "How might spending a lot of time with an AI companion affect the way someone handles disagreement or rejection?",
+  "What could parents, schools or tech companies do differently to reduce the risks described in this article?"
+];
+
+const slides = [];
+
+slides.push({type:'cover'});
+slides.push({type:'instructions'});
+comprehension.forEach((item,i)=> slides.push({type:'comprehension', data:item, index:i+1, total:comprehension.length}));
+vocabulary.forEach((item,i)=> slides.push({type:'vocabulary', data:item, index:i+1, total:vocabulary.length}));
+slides.push({type:'connections'});
+reflections.forEach((q,i)=> slides.push({type:'reflection', q, index:i+1, total:reflections.length}));
+slides.push({type:'end'});
+
+let current = 0;
+let revealed = false;
+let connState = null;
+
+function shuffleWords(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function initConnState(){
+  if(connState) return;
+  const allWords = connectionsCategories.flatMap(c=>c.words);
+  connState = {
+    order: shuffleWords(allWords),
+    solved: [],
+    selected: [],
+    mistakes: 0,
+    maxMistakes: 4,
+    message: '',
+    finished: false
+  };
+}
+
+function partForIndex(i){
+  const s = slides[i];
+  if(s.type==='cover' || s.type==='instructions') return 'open';
+  if(s.type==='comprehension') return 'comprehension';
+  if(s.type==='vocabulary') return 'vocabulary';
+  if(s.type==='connections') return 'connections';
+  if(s.type==='reflection' || s.type==='end') return 'reflection';
+}
+
+function render(){
+  const s = slides[current];
+  const el = document.getElementById('slide');
+  revealed = false;
+
+  if(s.type==='cover'){
+    el.innerHTML = `
+      <div class="kicker">Reading &amp; discussion</div>
+      <h1 class="cover-title">Teenage boys are turning to AI for therapy and romance</h1>
+      <div class="byline">Based on reporting by Jessica Murray and Robert Booth</div>
+      <p class="lede">Read the printed article on paper first. When you are ready, come back to this screen. For every question, hold up the coloured card that matches your answer.</p>
+    `;
+  }
+
+  if(s.type==='instructions'){
+    el.innerHTML = `
+      <div class="kicker">How this works</div>
+      <h2 class="q-title">Your four cards</h2>
+      <div class="card-key">
+        ${Object.entries(CARD).map(([letter,c])=>`
+          <div class="key-item" style="--c:var(${c.var})">
+            <span class="letter">${letter}</span>
+            <span class="name">${c.label} card</span>
+          </div>`).join('')}
+      </div>
+      <ul class="instr-list">
+        <li data-n="1">Read the whole article on paper before we begin.</li>
+        <li data-n="2">A question appears on this screen. Decide your answer on your own.</li>
+        <li data-n="3">When I say "cards up," hold up the card matching your choice.</li>
+        <li data-n="4">I will reveal the correct answer, then we move to the next question.</li>
+        <li data-n="5">At the end, turn to the person next to you and discuss.</li>
+      </ul>
+    `;
+  }
+
+  if(s.type==='comprehension' || s.type==='vocabulary'){
+    const d = s.data;
+    const isVocab = s.type==='vocabulary';
+    el.innerHTML = `
+      <div class="kicker">${isVocab ? 'Vocabulary check' : 'Understanding the text'} — ${s.index} of ${s.total}</div>
+      ${isVocab ? `<div class="word-tag">${d.word}</div>` : ''}
+      <h2 class="q-title">${isVocab ? `What does “${d.word}” mean here?` : d.q}</h2>
+      <div class="q-context">${isVocab ? d.context : ''}</div>
+      <div class="options">
+        ${Object.entries(d.options).map(([letter,text])=>`
+          <div class="opt" data-letter="${letter}" style="--c:var(${CARD[letter].var})">
+            <span class="tag">${letter}</span>
+            <span>${text}</span>
+          </div>`).join('')}
+      </div>
+      <div class="reveal-hint">Cards up first. Press "Reveal answer" when everyone has chosen.</div>
+    `;
+  }
+
+  if(s.type==='connections'){
+    initConnState();
+    const remaining = connState.order.filter(w => !connState.solved.some(cat=>cat.words.includes(w)));
+    el.innerHTML = `
+      <div class="kicker">Connections — find the four groups</div>
+      <h2 class="q-title">Sort these 16 words into four groups of four</h2>
+      <div class="conn-sub">Select four words that share a connection, then press "Check group." One idea links each group.</div>
+      <div class="conn-wrap">
+        <div class="conn-solved">
+          ${connState.solved.map(cat=>`
+            <div class="conn-solved-row" style="--c:var(${cat.colorVar})">
+              <span class="cat-name">${cat.name}</span>
+              <span class="cat-words">${cat.words.join(' · ')}</span>
+            </div>`).join('')}
+        </div>
+        ${!connState.finished ? `
+        <div class="conn-grid">
+          ${remaining.map(w=>`
+            <div class="conn-tile ${connState.selected.includes(w)?'selected':''}" data-word="${w}">${w}</div>
+          `).join('')}
+        </div>
+        <div class="conn-controls">
+          <button id="connCheck" class="primary">Check group</button>
+          <button id="connClear">Clear selection</button>
+          <button id="connShuffle">Shuffle</button>
+          <span class="conn-lives">Mistakes: ${connState.mistakes} / ${connState.maxMistakes}</span>
+        </div>
+        ` : `
+        <button id="connReset">Play again</button>
+        `}
+        <div class="conn-msg">${connState.message}</div>
+      </div>
+    `;
+
+    el.querySelectorAll('.conn-tile').forEach(tile=>{
+      tile.addEventListener('click', ()=>{
+        const w = tile.dataset.word;
+        const idx = connState.selected.indexOf(w);
+        if(idx>-1){
+          connState.selected.splice(idx,1);
+        } else if(connState.selected.length<4){
+          connState.selected.push(w);
+        }
+        connState.message = '';
+        render();
+      });
+    });
+
+    const checkBtn = el.querySelector('#connCheck');
+    if(checkBtn){
+      checkBtn.addEventListener('click', ()=>{
+        if(connState.selected.length!==4){
+          connState.message = 'Select exactly four words first.';
+          render();
+          return;
+        }
+        const match = connectionsCategories.find(cat=>
+          !connState.solved.includes(cat) &&
+          cat.words.every(w=>connState.selected.includes(w))
+        );
+        if(match){
+          connState.solved.push(match);
+          connState.selected = [];
+          connState.message = 'Correct.';
+          if(connState.solved.length === connectionsCategories.length){
+            connState.finished = true;
+            connState.message = 'All four groups found.';
+          }
+        } else {
+          connState.mistakes++;
+          connState.selected = [];
+          if(connState.mistakes>=connState.maxMistakes){
+            connectionsCategories.forEach(cat=>{
+              if(!connState.solved.includes(cat)) connState.solved.push(cat);
+            });
+            connState.finished = true;
+            connState.message = 'Out of tries. Here are the remaining groups.';
+          } else {
+            connState.message = 'Not quite. Try again.';
+          }
+        }
+        render();
+      });
+    }
+
+    const clearBtn = el.querySelector('#connClear');
+    if(clearBtn){
+      clearBtn.addEventListener('click', ()=>{
+        connState.selected = [];
+        connState.message = '';
+        render();
+      });
+    }
+
+    const shuffleBtn = el.querySelector('#connShuffle');
+    if(shuffleBtn){
+      shuffleBtn.addEventListener('click', ()=>{
+        const remainingNow = connState.order.filter(w => !connState.solved.some(cat=>cat.words.includes(w)));
+        connState.order = shuffleWords(remainingNow);
+        render();
+      });
+    }
+
+    const resetBtn = el.querySelector('#connReset');
+    if(resetBtn){
+      resetBtn.addEventListener('click', ()=>{
+        connState = null;
+        initConnState();
+        render();
+      });
+    }
+  }
+
+  if(s.type==='reflection'){
+    el.innerHTML = `
+      <div class="kicker">Turn and talk — ${s.index} of ${s.total}</div>
+      <div class="talk-wrap">
+        <p class="talk-prompt">${s.q}</p>
+        <div class="talk-note">Discuss with the person next to you for about two minutes. Be ready to share one idea with the class.</div>
+      </div>
+    `;
+  }
+
+  if(s.type==='end'){
+    el.innerHTML = `
+      <div class="end-wrap">
+        <div class="kicker">Wrap-up</div>
+        <h2>Nice work.</h2>
+        <p class="lede">Before we close: what is one sentence you would send back to the writers of this article, based on what we just discussed?</p>
+      </div>
+    `;
+  }
+
+  document.getElementById('counter').textContent = `${current+1} / ${slides.length}`;
+  document.getElementById('prevBtn').disabled = (current===0);
+  document.getElementById('nextBtn').textContent = (current===slides.length-1) ? 'Restart' : 'Next';
+
+  const revealBtn = document.getElementById('revealBtn');
+  revealBtn.style.display = (s.type==='comprehension' || s.type==='vocabulary') ? 'inline-block' : 'none';
+  revealBtn.textContent = 'Reveal answer';
+  revealBtn.disabled = false;
+
+  updateProgress();
+}
+
+function updateProgress(){
+  const parts = ['open','comprehension','vocabulary','connections','reflection'];
+  const currentPart = partForIndex(current);
+  parts.forEach(p=>{
+    const seg = document.querySelector(`.seg[data-part="${p}"] .fill`);
+    const idxOfPart = parts.indexOf(p);
+    const idxOfCurrent = parts.indexOf(currentPart);
+    if(idxOfPart < idxOfCurrent){
+      seg.style.transform = 'scaleX(1)';
+    } else if(idxOfPart === idxOfCurrent){
+      const group = slides.filter(s=>partForIndex(slides.indexOf(s))===p);
+      const groupIndices = slides.map((s,i)=>partForIndex(i)===p?i:null).filter(x=>x!==null);
+      const posInGroup = groupIndices.indexOf(current);
+      const frac = (posInGroup+1) / groupIndices.length;
+      seg.style.transform = `scaleX(${frac})`;
+    } else {
+      seg.style.transform = 'scaleX(0)';
+    }
+  });
+}
+
+function reveal(){
+  const s = slides[current];
+  if(!(s.type==='comprehension' || s.type==='vocabulary')) return;
+  revealed = true;
+  document.querySelectorAll('.opt').forEach(opt=>{
+    if(opt.dataset.letter === s.data.correct){
+      opt.classList.add('correct-reveal');
+    }
+  });
+}
+
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  if(current === slides.length-1){
+    current = 0;
+  } else {
+    current++;
+  }
+  render();
+});
+
+document.getElementById('prevBtn').addEventListener('click', ()=>{
+  if(current>0){ current--; render(); }
+});
+
+document.getElementById('revealBtn').addEventListener('click', reveal);
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight') document.getElementById('nextBtn').click();
+  if(e.key==='ArrowLeft') document.getElementById('prevBtn').click();
+  if(e.key===' '){ e.preventDefault(); reveal(); }
+});
+
+render();
+</script>
+
+</body>
+</html>
